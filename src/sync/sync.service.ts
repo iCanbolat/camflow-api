@@ -12,7 +12,9 @@ import {
   nextRowVersion,
   orgMembers,
   projectMembers,
+  projectTasks,
 } from '../database/schema';
+import { NotificationService } from '../notifications/notification.service';
 import { can, Permission, Role } from '../organizations/permissions';
 import { RedisService } from '../redis/redis.service';
 import { PUSH_ENTITIES, SyncPolicy } from './entities';
@@ -40,6 +42,7 @@ export class SyncService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly redis: RedisService,
+    private readonly notifications: NotificationService,
   ) {}
 
   // --- Push -------------------------------------------------------------
@@ -134,6 +137,9 @@ export class SyncService {
         m.op,
         ack.rowVersion ?? null,
       );
+      if (m.op === 'upsert') {
+        await this.fanOut(m, existing, membership);
+      }
     }
 
     await this.redis.client.set(
@@ -243,6 +249,80 @@ export class SyncService {
           if (parent?.assigneeMemberId === membership.id) return;
         }
         throw deny('Managing checklist items requires a manager role.');
+    }
+  }
+
+  /**
+   * Triggers notification fan-out for assignment + comment mutations. The actor
+   * is the pushing member; assignment fires only when the assignee changed.
+   * Best-effort — a fan-out error never fails the mutation.
+   */
+  private async fanOut(
+    m: SyncMutationDto,
+    existing: any,
+    membership: Membership,
+  ): Promise<void> {
+    const p = m.payload ?? {};
+    try {
+      if (m.entity === 'task') {
+        const assignee = (p.assigneeMemberId as string) ?? null;
+        if (assignee && (!existing || existing.assigneeMemberId !== assignee)) {
+          await this.notifications.taskAssigned(
+            m.organizationId,
+            {
+              id: m.id,
+              assigneeMemberId: assignee,
+              projectId: (p.projectId as string) ?? null,
+              title: (p.title as string) ?? '',
+            },
+            membership.id,
+          );
+        }
+      } else if (m.entity === 'checklist') {
+        const assignee = (p.assigneeMemberId as string) ?? null;
+        if (assignee && (!existing || existing.assigneeMemberId !== assignee)) {
+          await this.notifications.checklistAssigned(
+            m.organizationId,
+            {
+              id: m.id,
+              assigneeMemberId: assignee,
+              projectId: (p.projectId as string) ?? null,
+              name: (p.name as string) ?? '',
+            },
+            membership.id,
+          );
+        }
+      } else if (m.entity === 'taskComment' && !existing) {
+        const task = await this.db.query.projectTasks.findFirst({
+          where: eq(projectTasks.id, p.taskId as string),
+        });
+        if (task) {
+          await this.notifications.taskComment(
+            m.organizationId,
+            {
+              id: m.id,
+              taskId: p.taskId as string,
+              mentionIds: (p.mentionIds as string[]) ?? [],
+              text: (p.text as string) ?? '',
+            },
+            { assigneeMemberId: task.assigneeMemberId, projectId: task.projectId },
+            membership.id,
+          );
+        }
+      } else if (m.entity === 'photoComment' && !existing) {
+        await this.notifications.photoComment(
+          m.organizationId,
+          {
+            id: m.id,
+            photoId: p.photoId as string,
+            mentionIds: (p.mentionIds as string[]) ?? [],
+            text: (p.text as string) ?? '',
+          },
+          membership.id,
+        );
+      }
+    } catch {
+      // Notification fan-out is best-effort.
     }
   }
 

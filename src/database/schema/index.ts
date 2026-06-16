@@ -16,3 +16,4 @@ export * from './reports';
 export * from './pages';
 export * from './measurements';
 export * from './notifications';
+export * from './devices';

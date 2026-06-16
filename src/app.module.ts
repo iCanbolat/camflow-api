@@ -10,9 +10,14 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { InvitesModule } from './invites/invites.module';
+import { MediaModule } from './media/media.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { PushModule } from './push/push.module';
 import { QueueModule } from './queue/queue.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { RedisModule } from './redis/redis.module';
+import { StorageModule } from './storage/storage.module';
 import { SyncModule } from './sync/sync.module';
 
 @Module({
@@ -37,11 +42,16 @@ import { SyncModule } from './sync/sync.module';
     DatabaseModule,
     RedisModule,
     QueueModule,
+    StorageModule,
     HealthModule,
     AuthModule,
     OrganizationsModule,
     InvitesModule,
+    NotificationsModule,
     SyncModule,
+    MediaModule,
+    RealtimeModule,
+    PushModule,
   ],
   providers: [
     {

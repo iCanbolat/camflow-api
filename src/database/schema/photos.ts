@@ -1,4 +1,5 @@
 import {
+  bigint,
   doublePrecision,
   index,
   jsonb,
@@ -16,6 +17,13 @@ import { idCol, softDeleteCol, syncCols, timestamps } from './_helpers';
 
 export const photoSource = pgEnum('photo_source', ['camera', 'imported']);
 export const mediaType = pgEnum('media_type', ['photo', 'video']);
+export const mediaProcessingStatus = pgEnum('media_processing_status', [
+  'pending', // row exists, no bytes uploaded yet
+  'queued', // raw bytes committed, processing job enqueued
+  'processing',
+  'done',
+  'failed',
+]);
 
 /**
  * Photo or video. Mirrors iOS `Photo`. `fileName`/`thumbnailFileName` become
@@ -50,6 +58,16 @@ export const photos = pgTable(
     mediaType: mediaType('media_type').notNull().default('photo'),
     durationSeconds: doublePrecision('duration_seconds'),
     tagIds: uuid('tag_ids').array().notNull().default([]),
+    // --- Media pipeline (Phase 3): server-managed, not set by sync push ---
+    processingStatus: mediaProcessingStatus('processing_status')
+      .notNull()
+      .default('pending'),
+    rawObjectKey: varchar('raw_object_key', { length: 512 }),
+    processedObjectKey: varchar('processed_object_key', { length: 512 }),
+    thumbnailObjectKey: varchar('thumbnail_object_key', { length: 512 }),
+    watermarkedObjectKey: varchar('watermarked_object_key', { length: 512 }),
+    byteSize: bigint('byte_size', { mode: 'number' }),
+    processingError: text('processing_error'),
     ...timestamps(),
     ...softDeleteCol(),
     ...syncCols(),
