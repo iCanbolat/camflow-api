@@ -13,6 +13,7 @@ import { InvitesModule } from './invites/invites.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { QueueModule } from './queue/queue.module';
 import { RedisModule } from './redis/redis.module';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
     OrganizationsModule,
     InvitesModule,
+    SyncModule,
   ],
   providers: [
     {
