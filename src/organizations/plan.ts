@@ -71,5 +71,7 @@ export function maxMembers(plan: PlanTier): number | null {
 }
 
 export function effectiveStorageBytes(org: OrgBilling): number {
-  return PLAN_STORAGE_BYTES[effectivePlan(org)] + ADD_ON_BYTES[org.storageAddOn];
+  return (
+    PLAN_STORAGE_BYTES[effectivePlan(org)] + ADD_ON_BYTES[org.storageAddOn]
+  );
 }

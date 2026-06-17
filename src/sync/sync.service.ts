@@ -15,7 +15,7 @@ import {
   projectTasks,
 } from '../database/schema';
 import { NotificationService } from '../notifications/notification.service';
-import { can, Permission, Role } from '../organizations/permissions';
+import { can, Permission } from '../organizations/permissions';
 import { RedisService } from '../redis/redis.service';
 import { PUSH_ENTITIES, SyncPolicy } from './entities';
 import { PULL_ENTITIES, PullScope } from './pull-entities';
@@ -215,7 +215,7 @@ export class SyncService {
     existing: any,
     _m: SyncMutationDto,
   ): Promise<void> {
-    const role = membership.role as Role;
+    const role = membership.role;
     const deny = (message: string) =>
       new ForbiddenException({ code: 'forbidden', message });
 
@@ -305,7 +305,10 @@ export class SyncService {
               mentionIds: (p.mentionIds as string[]) ?? [],
               text: (p.text as string) ?? '',
             },
-            { assigneeMemberId: task.assigneeMemberId, projectId: task.projectId },
+            {
+              assigneeMemberId: task.assigneeMemberId,
+              projectId: task.projectId,
+            },
             membership.id,
           );
         }
@@ -391,7 +394,10 @@ export class SyncService {
         .select()
         .from(table)
         .where(
-          and(this.pullScope(def.scope, table, orgId, membership.id), gt(table.rowVersion, since)),
+          and(
+            this.pullScope(def.scope, table, orgId, membership.id),
+            gt(table.rowVersion, since),
+          ),
         )
         .orderBy(asc(table.rowVersion))
         .limit(limit);
@@ -404,9 +410,7 @@ export class SyncService {
     candidates.sort((a, b) => a.rowVersion - b.rowVersion);
     const page = candidates.slice(0, limit);
     const hasMore = capped || candidates.length > limit;
-    const nextCursor = page.length
-      ? page[page.length - 1].rowVersion
-      : since;
+    const nextCursor = page.length ? page[page.length - 1].rowVersion : since;
 
     const changes: Record<string, Record<string, unknown>[]> = {};
     for (const c of page) {

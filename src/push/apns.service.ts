@@ -24,9 +24,9 @@ export class ApnsService {
   get configured(): boolean {
     return Boolean(
       this.config.get('APNS_KEY_P8') &&
-        this.config.get('APNS_KEY_ID') &&
-        this.config.get('APNS_TEAM_ID') &&
-        this.config.get('APNS_BUNDLE_ID'),
+      this.config.get('APNS_KEY_ID') &&
+      this.config.get('APNS_TEAM_ID') &&
+      this.config.get('APNS_BUNDLE_ID'),
     );
   }
 
@@ -35,7 +35,8 @@ export class ApnsService {
     payload: object,
     opts: { collapseId?: string; pushType?: string } = {},
   ): Promise<ApnsResult> {
-    if (!this.configured) return { ok: false, status: 0, reason: 'not-configured' };
+    if (!this.configured)
+      return { ok: false, status: 0, reason: 'not-configured' };
 
     const jwt = await this.authToken();
     const host =

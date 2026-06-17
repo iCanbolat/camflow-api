@@ -3,11 +3,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { and, count, eq, isNull } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
-import {
-  appNotifications,
-  devices,
-  orgMembers,
-} from '../database/schema';
+import { appNotifications, devices, orgMembers } from '../database/schema';
 import { QUEUE_PUSH_SEND } from '../queue/queue.constants';
 import { ApnsService } from './apns.service';
 
@@ -78,7 +74,9 @@ export class PushSendWorker extends WorkerHost {
 
     for (const device of targets) {
       const res = await this.apns
-        .send(device.token, payload, { collapseId: notification.id.slice(0, 60) })
+        .send(device.token, payload, {
+          collapseId: notification.id.slice(0, 60),
+        })
         .catch(() => ({ ok: false, status: 0, reason: 'error' }));
       if (
         res.status === 410 ||
@@ -86,7 +84,9 @@ export class PushSendWorker extends WorkerHost {
         res.reason === 'Unregistered'
       ) {
         await this.db.delete(devices).where(eq(devices.token, device.token));
-        this.logger.log(`Pruned invalid device token for ${recipient.accountId}.`);
+        this.logger.log(
+          `Pruned invalid device token for ${recipient.accountId}.`,
+        );
       }
     }
   }

@@ -42,7 +42,7 @@ export class HealthController {
   private async checkRedis(): Promise<HealthIndicatorResult> {
     try {
       const pong = await this.redis.client.ping();
-      if (pong !== 'PONG') throw new Error(`unexpected ping reply: ${pong}`);
+      if (pong !== 'PONG') throw new Error('unexpected ping reply');
       return { redis: { status: 'up' } };
     } catch (e) {
       throw new HealthCheckError('Redis unavailable', {

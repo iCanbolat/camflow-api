@@ -16,7 +16,12 @@ import {
   SignInDto,
   SignUpDto,
 } from './auth.dto';
-import { nameFromEmail, normalizeEmail, pickColor, RequestContext } from './auth.util';
+import {
+  nameFromEmail,
+  normalizeEmail,
+  pickColor,
+  RequestContext,
+} from './auth.util';
 import { GoogleService } from './google.service';
 import { IssuedTokens, TokenService } from './token.service';
 
@@ -107,9 +112,15 @@ export class AuthService {
   ): Promise<SessionResponse> {
     const { email, name } = await this.google.verify(dto.idToken);
     if (!email) {
-      throw new UnauthorizedException('Google did not return an email address.');
+      throw new UnauthorizedException(
+        'Google did not return an email address.',
+      );
     }
-    const account = await this.findOrCreate('google', normalizeEmail(email), name);
+    const account = await this.findOrCreate(
+      'google',
+      normalizeEmail(email),
+      name,
+    );
     return this.session(account, ctx);
   }
 

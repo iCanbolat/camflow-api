@@ -38,7 +38,16 @@ export async function processVideo(raw: Buffer): Promise<ProcessedVideo> {
       '+faststart',
       outPath,
     ]);
-    await runFfmpeg(['-y', '-i', inPath, '-frames:v', '1', '-q:v', '3', posterPath]);
+    await runFfmpeg([
+      '-y',
+      '-i',
+      inPath,
+      '-frames:v',
+      '1',
+      '-q:v',
+      '3',
+      posterPath,
+    ]);
 
     const [processed, poster] = await Promise.all([
       readFile(outPath),

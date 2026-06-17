@@ -35,8 +35,7 @@ const date = (v: unknown): Date | null => (v ? new Date(v as string) : null);
 const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const str = (v: unknown, fallback = ''): string =>
   typeof v === 'string' ? v : fallback;
-const num = (v: unknown): number | null =>
-  typeof v === 'number' ? v : null;
+const num = (v: unknown): number | null => (typeof v === 'number' ? v : null);
 
 export interface PushEntityDef {
   table: any;
@@ -55,8 +54,8 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
       latitude: num(p.latitude),
       longitude: num(p.longitude),
       notes: str(p.notes),
-      coverPhotoId: (p.coverPhotoId as string) ?? null,
-      labelId: (p.labelId as string) ?? null,
+      coverPhotoId: p.coverPhotoId ?? null,
+      labelId: p.labelId ?? null,
     }),
   },
   projectLabel: {
@@ -80,8 +79,8 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
     table: photos,
     policy: 'member',
     columns: (p) => ({
-      projectId: (p.projectId as string) ?? null,
-      authorMemberId: (p.authorMemberId as string) ?? null,
+      projectId: p.projectId ?? null,
+      authorMemberId: p.authorMemberId ?? null,
       capturedAt: date(p.capturedAt) ?? new Date(),
       latitude: num(p.latitude),
       longitude: num(p.longitude),
@@ -99,8 +98,8 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
     table: photoComments,
     policy: 'member',
     columns: (p) => ({
-      photoId: p.photoId as string,
-      authorMemberId: (p.authorMemberId as string) ?? null,
+      photoId: p.photoId,
+      authorMemberId: p.authorMemberId ?? null,
       text: str(p.text),
       mentionIds: arr<string>(p.mentionIds),
     }),
@@ -109,8 +108,8 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
     table: projectTasks,
     policy: 'task',
     columns: (p) => ({
-      projectId: p.projectId as string,
-      assigneeMemberId: (p.assigneeMemberId as string) ?? null,
+      projectId: p.projectId,
+      assigneeMemberId: p.assigneeMemberId ?? null,
       title: str(p.title),
       note: str(p.note),
       dueDate: date(p.dueDate),
@@ -122,8 +121,8 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
     table: taskComments,
     policy: 'member',
     columns: (p) => ({
-      taskId: p.taskId as string,
-      authorMemberId: (p.authorMemberId as string) ?? null,
+      taskId: p.taskId,
+      authorMemberId: p.authorMemberId ?? null,
       text: str(p.text),
       mentionIds: arr<string>(p.mentionIds),
     }),
@@ -132,21 +131,21 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
     table: checklists,
     policy: 'checklist',
     columns: (p) => ({
-      projectId: p.projectId as string,
-      assigneeMemberId: (p.assigneeMemberId as string) ?? null,
+      projectId: p.projectId,
+      assigneeMemberId: p.assigneeMemberId ?? null,
       name: str(p.name),
-      templateId: (p.templateId as string) ?? null,
+      templateId: p.templateId ?? null,
     }),
   },
   checklistItem: {
     table: checklistItems,
     policy: 'checklistItem',
     columns: (p) => ({
-      checklistId: p.checklistId as string,
+      checklistId: p.checklistId,
       title: str(p.title),
       isDone: Boolean(p.isDone),
       completedAt: date(p.completedAt),
-      photoId: (p.photoId as string) ?? null,
+      photoId: p.photoId ?? null,
       sortOrder: num(p.sortOrder) ?? 0,
     }),
   },
@@ -162,22 +161,22 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
     table: reports,
     policy: 'member',
     columns: (p) => ({
-      projectId: p.projectId as string,
+      projectId: p.projectId,
       title: str(p.title),
       photoIds: arr<string>(p.photoIds),
-      photoNotes: (p.photoNotes as Record<string, string>) ?? {},
+      photoNotes: p.photoNotes ?? {},
       layout: str(p.layout, 'onePerPage'),
       includesChecklistSummary: Boolean(p.includesChecklistSummary),
-      pdfFileName: (p.pdfFileName as string) ?? null,
+      pdfFileName: p.pdfFileName ?? null,
     }),
   },
   beforeAfterPair: {
     table: beforeAfterPairs,
     policy: 'member',
     columns: (p) => ({
-      projectId: p.projectId as string,
-      beforePhotoId: p.beforePhotoId as string,
-      afterPhotoId: p.afterPhotoId as string,
+      projectId: p.projectId,
+      beforePhotoId: p.beforePhotoId,
+      afterPhotoId: p.afterPhotoId,
       layout: str(p.layout, 'sideBySide'),
     }),
   },
@@ -185,24 +184,24 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
     table: pages,
     policy: 'member',
     columns: (p) => ({
-      projectId: p.projectId as string,
-      authorMemberId: (p.authorMemberId as string) ?? null,
+      projectId: p.projectId,
+      authorMemberId: p.authorMemberId ?? null,
       title: str(p.title),
       contentData: p.contentData ?? {},
       sortOrder: num(p.sortOrder) ?? 0,
-      pdfFileName: (p.pdfFileName as string) ?? null,
+      pdfFileName: p.pdfFileName ?? null,
     }),
   },
   measurement: {
     table: measurements,
     policy: 'member',
     columns: (p) => ({
-      projectId: (p.projectId as string) ?? null,
+      projectId: p.projectId ?? null,
       capturedAt: date(p.capturedAt) ?? new Date(),
       unit: str(p.unit, 'meters'),
       segmentsData: p.segmentsData ?? [],
       totalMeters: num(p.totalMeters) ?? 0,
-      snapshotPhotoId: (p.snapshotPhotoId as string) ?? null,
+      snapshotPhotoId: p.snapshotPhotoId ?? null,
       notes: str(p.notes),
     }),
   },

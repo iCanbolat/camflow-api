@@ -45,7 +45,9 @@ export class OrgScopeGuard implements CanActivate {
       ),
     });
     if (!membership || membership.status !== 'active') {
-      throw new ForbiddenException('You are not a member of this organization.');
+      throw new ForbiddenException(
+        'You are not a member of this organization.',
+      );
     }
 
     request.organization = org;

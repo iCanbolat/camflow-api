@@ -1,9 +1,12 @@
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import { RedisService } from './redis/redis.service';
 import { AuthModule } from './auth/auth.module';
+import { CleanupModule } from './cleanup/cleanup.module';
 import { validateEnv } from './common/config/env';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -37,8 +40,15 @@ import { SyncModule } from './sync/sync.module';
         redact: ['req.headers.authorization', 'req.headers.cookie'],
       },
     }),
-    // Default rate limit; auth routes tighten it with @Throttle.
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    // Default rate limit (Redis-backed so it holds across instances); auth
+    // routes tighten it with @Throttle.
+    ThrottlerModule.forRootAsync({
+      inject: [RedisService],
+      useFactory: (redis: RedisService) => ({
+        throttlers: [{ ttl: 60_000, limit: 120 }],
+        storage: new ThrottlerStorageRedisService(redis.client),
+      }),
+    }),
     DatabaseModule,
     RedisModule,
     QueueModule,
@@ -52,6 +62,7 @@ import { SyncModule } from './sync/sync.module';
     MediaModule,
     RealtimeModule,
     PushModule,
+    CleanupModule,
   ],
   providers: [
     {

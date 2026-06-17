@@ -15,7 +15,11 @@ export interface UploadTokenPayload {
 }
 
 const b64url = (b: Buffer) =>
-  b.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  b
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 
 export function signUploadToken(
   payload: UploadTokenPayload,

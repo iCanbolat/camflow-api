@@ -47,7 +47,9 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     this.events$.complete();
-    await this.redis.subscriber.punsubscribe(CHANNEL_PATTERN).catch(() => undefined);
+    await this.redis.subscriber
+      .punsubscribe(CHANNEL_PATTERN)
+      .catch(() => undefined);
   }
 
   /** SSE stream for one org: change signals + periodic heartbeats. */
@@ -57,12 +59,19 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
       map(
         (e): MessageEvent => ({
           type: 'change',
-          data: { entity: e.entity, id: e.id, op: e.op, rowVersion: e.rowVersion },
+          data: {
+            entity: e.entity,
+            id: e.id,
+            op: e.op,
+            rowVersion: e.rowVersion,
+          },
         }),
       ),
     );
     const heartbeats = interval(HEARTBEAT_MS).pipe(
-      map((): MessageEvent => ({ type: 'heartbeat', data: { ts: Date.now() } })),
+      map(
+        (): MessageEvent => ({ type: 'heartbeat', data: { ts: Date.now() } }),
+      ),
     );
     return merge(changes, heartbeats);
   }

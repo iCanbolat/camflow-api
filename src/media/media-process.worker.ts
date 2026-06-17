@@ -3,20 +3,12 @@ import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
-import {
-  nextRowVersion,
-  organizations,
-  photos,
-} from '../database/schema';
+import { nextRowVersion, organizations, photos } from '../database/schema';
 import { QUEUE_MEDIA_PROCESS } from '../queue/queue.constants';
 import { RedisService } from '../redis/redis.service';
 import { STORAGE, type StorageProvider } from '../storage/storage.provider';
 import { processImage } from './image.processor';
-import {
-  processedKey,
-  thumbnailKey,
-  watermarkedKey,
-} from './media-keys';
+import { processedKey, thumbnailKey, watermarkedKey } from './media-keys';
 import { processVideo } from './video.processor';
 
 interface MediaJob {
@@ -89,8 +81,16 @@ export class MediaProcessWorker extends WorkerHost {
           thumbnail: thumbnailKey(orgId, photoId),
           watermarked: watermarkedKey(orgId, photoId),
         };
-        await this.storage.upload(keys.processed, result.processed, 'image/jpeg');
-        await this.storage.upload(keys.thumbnail, result.thumbnail, 'image/jpeg');
+        await this.storage.upload(
+          keys.processed,
+          result.processed,
+          'image/jpeg',
+        );
+        await this.storage.upload(
+          keys.thumbnail,
+          result.thumbnail,
+          'image/jpeg',
+        );
         await this.storage.upload(
           keys.watermarked!,
           result.watermarked,
@@ -120,9 +120,12 @@ export class MediaProcessWorker extends WorkerHost {
       // Free the raw upload now that derivatives are stored.
       await this.storage.delete(photo.rawObjectKey).catch(() => undefined);
       await this.publish(orgId, photoId, Number(row.rowVersion));
-      this.logger.log(`Processed ${photoId} (${photo.mediaType}, ${byteSize}B).`);
+      this.logger.log(
+        `Processed ${photoId} (${photo.mediaType}, ${byteSize}B).`,
+      );
     } catch (e) {
-      const message = (e as Error).message?.slice(0, 480) ?? 'processing failed';
+      const message =
+        (e as Error).message?.slice(0, 480) ?? 'processing failed';
       await this.db
         .update(photos)
         .set({
@@ -146,7 +149,12 @@ export class MediaProcessWorker extends WorkerHost {
     try {
       await this.redis.publisher.publish(
         `org:${orgId}`,
-        JSON.stringify({ entity: 'photo', id: photoId, op: 'upsert', rowVersion }),
+        JSON.stringify({
+          entity: 'photo',
+          id: photoId,
+          op: 'upsert',
+          rowVersion,
+        }),
       );
     } catch {
       // best-effort

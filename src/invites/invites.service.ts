@@ -9,7 +9,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { toOrganizationDto } from '../common/mappers';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { nextRowVersion, orgMembers, organizations } from '../database/schema';
-import { roleDisplayName, Role } from '../organizations/permissions';
+import { roleDisplayName } from '../organizations/permissions';
 import {
   buildInviteLink,
   generateCode,
@@ -58,7 +58,7 @@ export class InvitesService {
       organizationName: org.name,
       organizationLogoFileName: org.logoFileName,
       memberName: member.name,
-      roleDisplayName: roleDisplayName(member.role as Role),
+      roleDisplayName: roleDisplayName(member.role),
     };
   }
 

@@ -1,4 +1,11 @@
-import { Controller, MessageEvent, Param, ParseUUIDPipe, Sse, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  MessageEvent,
+  Param,
+  ParseUUIDPipe,
+  Sse,
+  UseGuards,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { OrgScopeGuard } from '../common/guards/org-scope.guard';
 import { RealtimeService } from './realtime.service';
@@ -14,7 +21,9 @@ export class RealtimeController {
    */
   @Sse(':orgId')
   @UseGuards(OrgScopeGuard)
-  stream(@Param('orgId', ParseUUIDPipe) orgId: string): Observable<MessageEvent> {
+  stream(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+  ): Observable<MessageEvent> {
     return this.realtime.streamFor(orgId);
   }
 }

@@ -6,7 +6,7 @@ import {
   trialDaysRemaining,
   trialEndsAt,
 } from '../organizations/plan';
-import { roleDisplayName, Role } from '../organizations/permissions';
+import { roleDisplayName } from '../organizations/permissions';
 
 type AccountRow = typeof accounts.$inferSelect;
 type OrganizationRow = typeof organizations.$inferSelect;
@@ -73,7 +73,7 @@ export function toMemberDto(m: OrgMemberRow) {
     phoneNumber: m.phoneNumber,
     title: m.title,
     role: m.role,
-    roleDisplayName: roleDisplayName(m.role as Role),
+    roleDisplayName: roleDisplayName(m.role),
     status: m.status,
     colorHex: m.colorHex,
     inviteCode: m.inviteCode,

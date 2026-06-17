@@ -38,10 +38,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof res === 'string') {
         message = res;
       } else if (res && typeof res === 'object') {
-        const { message: m, statusCode, error, ...rest } = res as Record<
-          string,
-          unknown
-        >;
+        const {
+          message: m,
+          statusCode,
+          error,
+          ...rest
+        } = res as Record<string, unknown>;
         message = (m as string | string[]) ?? exception.message;
         extra = rest;
       }

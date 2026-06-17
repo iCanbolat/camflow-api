@@ -18,7 +18,9 @@ export class LocalStorageService implements StorageProvider {
   private readonly publicBase: string;
 
   constructor(config: ConfigService) {
-    this.baseDir = resolve(config.get<string>('STORAGE_LOCAL_DIR', './storage'));
+    this.baseDir = resolve(
+      config.get<string>('STORAGE_LOCAL_DIR', './storage'),
+    );
     const port = config.get<number>('PORT', 3000);
     this.publicBase = config.get<string>(
       'API_PUBLIC_URL',

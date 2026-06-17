@@ -16,7 +16,11 @@ import {
 import { QUEUE_PUSH_SEND } from '../queue/queue.constants';
 import { RedisService } from '../redis/redis.service';
 
-type NotificationKind = 'taskAssigned' | 'checklistAssigned' | 'mention' | 'comment';
+type NotificationKind =
+  | 'taskAssigned'
+  | 'checklistAssigned'
+  | 'mention'
+  | 'comment';
 
 interface CreateInput {
   organizationId: string;
@@ -48,7 +52,12 @@ export class NotificationService {
 
   async taskAssigned(
     orgId: string,
-    task: { id: string; assigneeMemberId: string | null; projectId?: string | null; title: string },
+    task: {
+      id: string;
+      assigneeMemberId: string | null;
+      projectId?: string | null;
+      title: string;
+    },
     actorId: string | null,
   ) {
     if (!task.assigneeMemberId || task.assigneeMemberId === actorId) return;
@@ -65,10 +74,16 @@ export class NotificationService {
 
   async checklistAssigned(
     orgId: string,
-    checklist: { id: string; assigneeMemberId: string | null; projectId?: string | null; name: string },
+    checklist: {
+      id: string;
+      assigneeMemberId: string | null;
+      projectId?: string | null;
+      name: string;
+    },
     actorId: string | null,
   ) {
-    if (!checklist.assigneeMemberId || checklist.assigneeMemberId === actorId) return;
+    if (!checklist.assigneeMemberId || checklist.assigneeMemberId === actorId)
+      return;
     await this.create({
       organizationId: orgId,
       recipientMemberId: checklist.assigneeMemberId,
@@ -114,7 +129,12 @@ export class NotificationService {
 
   async photoComment(
     orgId: string,
-    comment: { id: string; photoId: string; mentionIds: string[]; text: string },
+    comment: {
+      id: string;
+      photoId: string;
+      mentionIds: string[];
+      text: string;
+    },
     actorId: string | null,
   ) {
     for (const recipientMemberId of comment.mentionIds) {
@@ -144,7 +164,11 @@ export class NotificationService {
       .set({ isRead: true, readAt: new Date(), rowVersion: nextRowVersion() })
       .where(eq(appNotifications.id, notificationId))
       .returning();
-    await this.publish(notification.organizationId, notification.id, Number(row.rowVersion));
+    await this.publish(
+      notification.organizationId,
+      notification.id,
+      Number(row.rowVersion),
+    );
     return { id: notificationId, isRead: true };
   }
 
@@ -223,7 +247,9 @@ export class NotificationService {
       ),
     });
     if (!member || member.status !== 'active') {
-      throw new ForbiddenException('You are not a member of this organization.');
+      throw new ForbiddenException(
+        'You are not a member of this organization.',
+      );
     }
     return member;
   }
@@ -232,7 +258,12 @@ export class NotificationService {
     try {
       await this.redis.publisher.publish(
         `org:${orgId}`,
-        JSON.stringify({ entity: 'notification', id, op: 'upsert', rowVersion }),
+        JSON.stringify({
+          entity: 'notification',
+          id,
+          op: 'upsert',
+          rowVersion,
+        }),
       );
     } catch {
       // best-effort

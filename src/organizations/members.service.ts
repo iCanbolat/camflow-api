@@ -7,11 +7,7 @@ import {
 import { and, eq, isNull } from 'drizzle-orm';
 import { toMemberDto } from '../common/mappers';
 import { DRIZZLE, type Database } from '../database/database.module';
-import {
-  nextRowVersion,
-  orgMembers,
-  projectMembers,
-} from '../database/schema';
+import { nextRowVersion, orgMembers, projectMembers } from '../database/schema';
 import { pickColor } from '../auth/auth.util';
 import {
   InviteMemberDto,

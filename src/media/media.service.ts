@@ -19,10 +19,7 @@ import {
 import { effectiveStorageBytes } from '../organizations/plan';
 import { QUEUE_MEDIA_PROCESS } from '../queue/queue.constants';
 import { STORAGE, type StorageProvider } from '../storage/storage.provider';
-import {
-  belongsToPhoto,
-  rawKey,
-} from './media-keys';
+import { belongsToPhoto, rawKey } from './media-keys';
 import { CommitUploadDto, UploadTicketDto } from './media.dto';
 import { signUploadToken, verifyUploadToken } from './upload-token';
 
@@ -178,7 +175,10 @@ export class MediaService {
       .select({ used: sql<string>`coalesce(sum(${photos.byteSize}), 0)` })
       .from(photos)
       .where(
-        and(eq(photos.organizationId, organizationId), isNull(photos.deletedAt)),
+        and(
+          eq(photos.organizationId, organizationId),
+          isNull(photos.deletedAt),
+        ),
       );
     const org = await this.db.query.organizations.findFirst({
       where: eq(organizations.id, organizationId),

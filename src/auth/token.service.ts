@@ -58,7 +58,8 @@ export class TokenService {
       where: eq(refreshTokens.id, id),
     });
     if (!row) throw new UnauthorizedException('Invalid refresh token.');
-    if (row.revokedAt) throw new UnauthorizedException('Refresh token revoked.');
+    if (row.revokedAt)
+      throw new UnauthorizedException('Refresh token revoked.');
     if (row.expiresAt.getTime() < Date.now()) {
       throw new UnauthorizedException('Refresh token expired.');
     }

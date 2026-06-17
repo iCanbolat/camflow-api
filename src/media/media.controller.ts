@@ -37,11 +37,7 @@ export class MediaController {
   @Public()
   @Put('upload')
   upload(@Query('token') token: string, @Req() req: Request) {
-    return this.media.handleUpload(
-      token,
-      req,
-      req.headers['content-type'],
-    );
+    return this.media.handleUpload(token, req, req.headers['content-type']);
   }
 
   /** Link the uploaded object to the photo and enqueue processing. */
@@ -77,10 +73,7 @@ export class MediaController {
   /** Dev-only file serving for the local storage driver. */
   @Public()
   @Get('file/*key')
-  async file(
-    @Param('key') key: string | string[],
-    @Res() res: Response,
-  ) {
+  async file(@Param('key') key: string | string[], @Res() res: Response) {
     const path = Array.isArray(key) ? key.join('/') : key;
     const data = await this.media.download(path);
     res.send(data);

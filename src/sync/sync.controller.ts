@@ -1,4 +1,12 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CurrentUser, type AuthUser } from '../common/decorators';
 import { SyncPullQueryDto, SyncPushDto } from './sync.dto';
 import { SyncService } from './sync.service';
