@@ -35,7 +35,9 @@ async function bootstrap() {
   const jsonParser = json({ limit: '2mb' });
   const formParser = urlencoded({ extended: true, limit: '2mb' });
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (RAW_BODY_PATHS.some((p) => req.path.startsWith(p))) return next();
+    // Exact match only: a prefix check would also catch `/media/upload-ticket`
+    // (a JSON route) and leave its body unparsed.
+    if (RAW_BODY_PATHS.includes(req.path)) return next();
     jsonParser(req, res, (err) =>
       err ? next(err) : formParser(req, res, next),
     );
