@@ -29,6 +29,13 @@
       "when": 1781649984660,
       "tag": "0003_ancient_black_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781794526280,
+      "tag": "0004_furry_metal_master",
+      "breakpoints": true
     }
   ]
 }

@@ -19,6 +19,10 @@ import {
 import { effectiveStorageBytes } from '../organizations/plan';
 import { QUEUE_MEDIA_PROCESS } from '../queue/queue.constants';
 import { STORAGE, type StorageProvider } from '../storage/storage.provider';
+import {
+  deriveVerification,
+  signCapture,
+} from './capture-verification';
 import { belongsToPhoto, rawKey } from './media-keys';
 import { CommitUploadDto, UploadTicketDto } from './media.dto';
 import { signUploadToken, verifyUploadToken } from './upload-token';
@@ -31,6 +35,7 @@ const SIGNED_URL_TTL_SECONDS = 3600;
 @Injectable()
 export class MediaService {
   private readonly uploadSecret: string;
+  private readonly signingSecret: string;
   private readonly apiBase: string;
 
   constructor(
@@ -40,6 +45,9 @@ export class MediaService {
     private readonly config: ConfigService,
   ) {
     this.uploadSecret = config.getOrThrow<string>('JWT_ACCESS_SECRET');
+    // Dedicated capture-signing key; falls back to the access secret in dev.
+    this.signingSecret =
+      config.get<string>('MEDIA_SIGNING_SECRET') ?? this.uploadSecret;
     const port = config.get<number>('PORT', 3000);
     this.apiBase = config.get<string>(
       'API_PUBLIC_URL',
@@ -129,8 +137,63 @@ export class MediaService {
         },
       });
 
+    // Grade and seal the capture stamp against the server clock, before the
+    // worker bakes it into the watermark. Bumps row_version so pull delivers
+    // the verdict without disturbing LWW (same pattern as the worker).
+    await this.stampVerification(dto.photoId);
+
     await this.queue.add('process', { photoId: dto.photoId });
     return { photoId: dto.photoId, status: 'queued' as const };
+  }
+
+  /** Derive verification + HMAC-seal a photo's capture evidence at commit time. */
+  private async stampVerification(photoId: string) {
+    const photo = await this.db.query.photos.findFirst({
+      where: eq(photos.id, photoId),
+    });
+    if (!photo) return;
+
+    const serverReceivedAt = new Date();
+    const { verification, clockSkewSeconds } = deriveVerification(
+      {
+        source: photo.source,
+        capturedAt: photo.capturedAt,
+        latitude: photo.latitude,
+        longitude: photo.longitude,
+        locationAccuracyM: photo.locationAccuracyM,
+        locationFixAt: photo.locationFixAt,
+        isLocationSimulated: photo.isLocationSimulated,
+      },
+      serverReceivedAt,
+    );
+    const signature = signCapture(
+      {
+        id: photo.id,
+        source: photo.source,
+        capturedAt: photo.capturedAt,
+        latitude: photo.latitude,
+        longitude: photo.longitude,
+        locationAccuracyM: photo.locationAccuracyM,
+        locationFixAt: photo.locationFixAt,
+        isLocationSimulated: photo.isLocationSimulated,
+        authorMemberId: photo.authorMemberId,
+        verification,
+        serverReceivedAt,
+      },
+      this.signingSecret,
+    );
+
+    await this.db
+      .update(photos)
+      .set({
+        captureVerification: verification,
+        serverReceivedAt,
+        clockSkewSeconds,
+        captureSignature: signature,
+        signedAt: serverReceivedAt,
+        rowVersion: nextRowVersion(),
+      })
+      .where(eq(photos.id, photoId));
   }
 
   /** Signed CDN URLs for the processed variants. */

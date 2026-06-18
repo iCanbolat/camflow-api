@@ -75,6 +75,9 @@ export class MediaProcessWorker extends WorkerHost {
           capturedAt: photo.capturedAt,
           latitude: photo.latitude,
           longitude: photo.longitude,
+          accuracyM: photo.locationAccuracyM,
+          verification: photo.captureVerification,
+          signature: photo.captureSignature,
         });
         keys = {
           processed: processedKey(orgId, photoId, false),

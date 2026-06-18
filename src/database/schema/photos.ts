@@ -1,5 +1,6 @@
 import {
   bigint,
+  boolean,
   doublePrecision,
   index,
   jsonb,
@@ -26,6 +27,17 @@ export const mediaProcessingStatus = pgEnum('media_processing_status', [
 ]);
 
 /**
+ * Server-derived trustworthiness of a photo's location/time stamp. Computed at
+ * media commit from the client-supplied capture evidence + the server clock;
+ * never set by sync push.
+ */
+export const captureVerification = pgEnum('media_capture_verification', [
+  'verified', // camera, fresh+accurate fix, not simulated, clock in tolerance
+  'unverified', // imported, or missing/weak/stale location evidence
+  'flagged', // simulated location or excessive clock skew — suspicious
+]);
+
+/**
  * Photo or video. Mirrors iOS `Photo`. `fileName`/`thumbnailFileName` become
  * Bunny object keys in Phase 3 (media-processing columns added then). Tag
  * assignment is denormalized in `tagIds`. Annotations are stored as JSON.
@@ -48,6 +60,12 @@ export const photos = pgTable(
       .defaultNow(),
     latitude: doublePrecision('latitude'),
     longitude: doublePrecision('longitude'),
+    // --- Capture evidence (client-supplied via sync push) ---
+    locationAccuracyM: doublePrecision('location_accuracy_m'),
+    locationFixAt: timestamp('location_fix_at', { withTimezone: true }),
+    isLocationSimulated: boolean('is_location_simulated')
+      .notNull()
+      .default(false),
     fileName: varchar('file_name', { length: 255 }).notNull().default(''),
     thumbnailFileName: varchar('thumbnail_file_name', { length: 255 })
       .notNull()
@@ -68,6 +86,14 @@ export const photos = pgTable(
     watermarkedObjectKey: varchar('watermarked_object_key', { length: 512 }),
     byteSize: bigint('byte_size', { mode: 'number' }),
     processingError: text('processing_error'),
+    // --- Capture verification (server-derived at commit; never pushed) ---
+    captureVerification: captureVerification('capture_verification')
+      .notNull()
+      .default('unverified'),
+    serverReceivedAt: timestamp('server_received_at', { withTimezone: true }),
+    clockSkewSeconds: doublePrecision('clock_skew_seconds'),
+    captureSignature: varchar('capture_signature', { length: 128 }),
+    signedAt: timestamp('signed_at', { withTimezone: true }),
     ...timestamps(),
     ...softDeleteCol(),
     ...syncCols(),

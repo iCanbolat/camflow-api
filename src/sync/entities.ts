@@ -36,6 +36,7 @@ const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const str = (v: unknown, fallback = ''): string =>
   typeof v === 'string' ? v : fallback;
 const num = (v: unknown): number | null => (typeof v === 'number' ? v : null);
+const bool = (v: unknown): boolean => v === true;
 
 export interface PushEntityDef {
   table: any;
@@ -84,6 +85,10 @@ export const PUSH_ENTITIES: Record<string, PushEntityDef> = {
       capturedAt: date(p.capturedAt) ?? new Date(),
       latitude: num(p.latitude),
       longitude: num(p.longitude),
+      // Capture evidence the server uses to derive verification at commit.
+      locationAccuracyM: num(p.locationAccuracyM),
+      locationFixAt: date(p.locationFixAt),
+      isLocationSimulated: bool(p.isLocationSimulated),
       fileName: str(p.fileName),
       thumbnailFileName: str(p.thumbnailFileName),
       caption: str(p.caption),

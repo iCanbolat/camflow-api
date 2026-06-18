@@ -25,6 +25,10 @@ export const envSchema = z
     APPLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
 
+    // Key for HMAC-sealing photo capture stamps (tamper-evidence). Falls back
+    // to JWT_ACCESS_SECRET in dev; set a dedicated value in production.
+    MEDIA_SIGNING_SECRET: z.string().optional(),
+
     INVITE_WEB_HOST: z.string().default('camflow.app'),
     INVITE_SCHEME: z.string().default('camflow'),
 
